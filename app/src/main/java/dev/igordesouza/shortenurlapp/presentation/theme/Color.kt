@@ -1,4 +1,4 @@
-package dev.igordesouza.shortenurlapp.ui.theme
+package dev.igordesouza.shortenurlapp.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 
