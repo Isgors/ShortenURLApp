@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.test)
     ksp(libs.room.compiler)
     testImplementation(libs.junit)
+    testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     androidTestImplementation(libs.mockk.android)

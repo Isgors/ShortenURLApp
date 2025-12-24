@@ -1,4 +1,4 @@
-package dev.igordesouza.shortenurlapp.presentation.home.model.mapper
+package dev.igordesouza.shortenurlapp.presentation.home.model
 
 import dev.igordesouza.shortenurlapp.domain.model.Url as DomainUrl
 import dev.igordesouza.shortenurlapp.presentation.home.model.Url as PresentationUrl
@@ -17,4 +17,8 @@ fun PresentationUrl.toDomain(): DomainUrl {
         originalUrl = originalUrl,
         shortenedUrl = shortenedUrl
     )
+}
+
+fun List<DomainUrl>.toPresentation(): List<PresentationUrl> {
+    return map { it.toPresentation() }
 }

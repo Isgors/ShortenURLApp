@@ -9,12 +9,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import dev.igordesouza.shortenurlapp.presentation.home.HomeScreen
-import dev.igordesouza.shortenurlapp.presentation.home.HomeViewModelImpl
+import dev.igordesouza.shortenurlapp.presentation.home.HomeViewModel
 import dev.igordesouza.shortenurlapp.presentation.theme.ShortenURLAppTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
-    val viewModel: HomeViewModelImpl by viewModel()
+    val viewModel: HomeViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

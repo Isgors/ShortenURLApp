@@ -6,22 +6,20 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import dev.igordesouza.shortenurlapp.data.local.model.UrlEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UrlDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUrl(url: UrlEntity)
-
     @Query("SELECT * FROM urls ORDER BY createdAt DESC")
-    suspend fun getRecentlyShortenedUrls(): List<UrlEntity>
+    fun observeUrls(): Flow<List<UrlEntity>>
 
-    @Query("SELECT * FROM urls WHERE originalUrl = :originalUrl LIMIT 1")
-    suspend fun findByOriginalUrl(originalUrl: String): UrlEntity?
-
-    @Delete
-    suspend fun deleteUrl(url: UrlEntity)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(url: UrlEntity)
 
     @Query("DELETE FROM urls")
-    suspend fun deleteAllUrls()
+    suspend fun deleteAll()
+
+    @Delete
+    suspend fun delete(url: UrlEntity)
 }

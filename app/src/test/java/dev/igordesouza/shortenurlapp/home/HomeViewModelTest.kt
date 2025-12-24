@@ -1,22 +1,21 @@
 package dev.igordesouza.shortenurlapp.home
 
-import dev.igordesouza.shortenurlapp.domain.model.Url
-import dev.igordesouza.shortenurlapp.domain.usecase.DeleteAllUrlsUseCase
-import dev.igordesouza.shortenurlapp.domain.usecase.DeleteUrlUseCase
-import dev.igordesouza.shortenurlapp.domain.usecase.GetRecentlyShortenedUrlsUseCase
-import dev.igordesouza.shortenurlapp.domain.usecase.ShortenUrlUseCase
-import dev.igordesouza.shortenurlapp.presentation.home.HomeUiState
+import app.cash.turbine.test
+import dev.igordesouza.shortenurlapp.domain.fakes.FakeData
+import dev.igordesouza.shortenurlapp.domain.fakes.FakeDeleteAllUrlsUseCase
+import dev.igordesouza.shortenurlapp.domain.fakes.FakeDeleteUrlUseCase
+import dev.igordesouza.shortenurlapp.domain.fakes.FakeGetRecentlyShortenedUrlsUseCase
+import dev.igordesouza.shortenurlapp.domain.fakes.FakeObserveUrlsUseCase
+import dev.igordesouza.shortenurlapp.domain.fakes.FakeShortenUrlUseCase
+import dev.igordesouza.shortenurlapp.domain.model.ShortenUrlOutcome
+import dev.igordesouza.shortenurlapp.presentation.home.HomeEffect
+import dev.igordesouza.shortenurlapp.presentation.home.HomeIntent
 import dev.igordesouza.shortenurlapp.presentation.home.HomeViewModel
-import dev.igordesouza.shortenurlapp.presentation.home.HomeViewModelImpl
-import dev.igordesouza.shortenurlapp.presentation.home.model.mapper.toDomain
-import dev.igordesouza.shortenurlapp.presentation.home.model.mapper.toPresentation
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -24,26 +23,30 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
 
-    private val shortenUrlUseCase: ShortenUrlUseCase = mockk()
-    private val getRecentlyShortenedUrlsUseCase: GetRecentlyShortenedUrlsUseCase = mockk()
-    private val deleteUrlUseCase: DeleteUrlUseCase = mockk(relaxed = true)
-    private val deleteAllUrlsUseCase: DeleteAllUrlsUseCase = mockk(relaxed = true)
+    private val dispatcher = StandardTestDispatcher()
 
     private lateinit var viewModel: HomeViewModel
 
-    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var fakeObserveUrls: FakeObserveUrlsUseCase
+    private lateinit var fakeShortenUrl: FakeShortenUrlUseCase
+    private val fakeDeleteUrl = FakeDeleteUrlUseCase()
+    private val fakeDeleteAll = FakeDeleteAllUrlsUseCase()
 
     @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-        viewModel = HomeViewModelImpl(
-            shortenUrlUseCase,
-            getRecentlyShortenedUrlsUseCase,
-            deleteUrlUseCase,
-            deleteAllUrlsUseCase
+    fun setup() {
+        Dispatchers.setMain(dispatcher)
+
+        fakeObserveUrls = FakeObserveUrlsUseCase()
+        fakeShortenUrl = FakeShortenUrlUseCase()
+
+        viewModel = HomeViewModel(
+            observeUrlsUseCase = fakeObserveUrls,
+            shortenUrlUseCase = fakeShortenUrl,
+            deleteUrlUseCase = fakeDeleteUrl,
+            deleteAllUrlsUseCase = fakeDeleteAll
         )
     }
 
@@ -53,147 +56,61 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `getRecentlyShortenedUrls success updates state to Idle with urls`() = runTest {
-        // Given
-        val urls = listOf(Url("alias", "original", "short"))
-        coEvery { getRecentlyShortenedUrlsUseCase() } returns urls
+    fun `empty input emits error effect`() = runTest {
+        viewModel.dispatch(HomeIntent.ShortenClicked)
 
-        // When
-        viewModel.getRecentlyShortenedUrls()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value
-        assert(state is HomeUiState.Idle)
-        assert((state as HomeUiState.Idle).urls.isNotEmpty())
+        viewModel.effect.test {
+            assertEquals(
+                HomeEffect.ShowError("URL cannot be empty"),
+                awaitItem()
+            )
+        }
     }
 
     @Test
-    fun `getRecentlyShortenedUrls failure updates state to Idle with error`() = runTest {
-        // Given
-        val exception = RuntimeException("Failed to fetch")
-        coEvery { getRecentlyShortenedUrlsUseCase() } throws exception
+    fun `success clears input and scrolls`() = runTest {
+        fakeShortenUrl.emit(ShortenUrlOutcome.Success)
 
-        // When
-        viewModel.getRecentlyShortenedUrls()
-        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.UrlInputChanged("https://google.com"))
+        viewModel.dispatch(HomeIntent.ShortenClicked)
 
-        // Then
-        val state = viewModel.uiState.value
-        assert(state is HomeUiState.Idle)
-        assert((state as HomeUiState.Idle).error == exception.message)
+        advanceUntilIdle()
+
+        assertEquals("", viewModel.state.value.urlInput)
+
+        viewModel.effect.test {
+            assertEquals(
+                HomeEffect.ScrollToIndex(0),
+                awaitItem()
+            )
+        }
     }
 
     @Test
-    fun `shortenUrl success clears input and updates list`() = runTest {
-        // Given
-        val initialUrl = "https://google.com"
-        val newUrl = Url("newAlias", initialUrl, "shortNew")
-        val updatedUrls = listOf(newUrl)
+    fun `error outcome emits error effect`() = runTest {
+        fakeShortenUrl.emit(
+            ShortenUrlOutcome.Error("Network error")
+        )
 
-        // Set initial state to Idle
-        coEvery { getRecentlyShortenedUrlsUseCase() } returns emptyList() andThen updatedUrls
-        viewModel.getRecentlyShortenedUrls()
-        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.dispatch(HomeIntent.ShortenClicked)
 
-        viewModel.onUrlInputChanged(initialUrl)
-        coEvery { shortenUrlUseCase(initialUrl) } returns flowOf(Result.success(newUrl))
-
-        // When
-        viewModel.shortenUrl()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value as HomeUiState.Idle
-        assert(state.urls == updatedUrls.map { it.toPresentation() })
-        assert(state.urlInput.isEmpty())
-        assert(state.error == null)
+        viewModel.effect.test {
+            assertEquals(
+                HomeEffect.ShowError("Network error"),
+                awaitItem()
+            )
+        }
     }
 
     @Test
-    fun `shortenUrl failure shows error and keeps input`() = runTest {
-        // Given
-        val initialUrl = "https://google.com"
-        val exception = RuntimeException("Shortening failed")
+    fun `observed urls update state`() = runTest {
+        val urls = FakeData.urls(2)
 
-        // Set initial state to Idle
-        coEvery { getRecentlyShortenedUrlsUseCase() } returns emptyList()
-        viewModel.getRecentlyShortenedUrls()
-        testDispatcher.scheduler.advanceUntilIdle()
+        fakeObserveUrls.emit(urls)
+        advanceUntilIdle()
 
-        viewModel.onUrlInputChanged(initialUrl)
-        coEvery { shortenUrlUseCase(initialUrl) } returns flowOf(Result.failure(exception))
-
-        // When
-        viewModel.shortenUrl()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        val state = viewModel.uiState.value as HomeUiState.Idle
-        assert(state.urlInput == initialUrl)
-        assert(state.error != null)
+        assertEquals(urls, viewModel.state.value.urls)
     }
 
-    @Test
-    fun `shortenUrl does not run if input is blank`() = runTest {
-        // Given
-        viewModel.onUrlInputChanged("")
 
-        // When
-        viewModel.shortenUrl()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        coVerify(exactly = 0) { shortenUrlUseCase(any()) }
-    }
-
-    @Test
-    fun `deleteUrl refreshes url list`() = runTest {
-        // Given
-        val urlToDelete = Url("alias", "original", "short").toPresentation()
-        coEvery { getRecentlyShortenedUrlsUseCase() } returns emptyList()
-
-        // When
-        viewModel.deleteUrl(urlToDelete)
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        coVerify { deleteUrlUseCase(urlToDelete.toDomain()) }
-        coVerify { getRecentlyShortenedUrlsUseCase() }
-        val state = viewModel.uiState.value as HomeUiState.Idle
-        assert(state.urls.isEmpty())
-    }
-
-    @Test
-    fun `deleteAllUrls refreshes url list`() = runTest {
-        // Given
-        coEvery { getRecentlyShortenedUrlsUseCase() } returns emptyList()
-
-        // When
-        viewModel.deleteAllUrls()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        coVerify { deleteAllUrlsUseCase() }
-        coVerify { getRecentlyShortenedUrlsUseCase() }
-        val state = viewModel.uiState.value as HomeUiState.Idle
-        assert(state.urls.isEmpty())
-    }
-
-    @Test
-    fun `dismissError sets error to null`() = runTest {
-        // Given
-        val exception = RuntimeException("An error")
-        coEvery { getRecentlyShortenedUrlsUseCase() } throws exception
-        viewModel.getRecentlyShortenedUrls()
-        testDispatcher.scheduler.advanceUntilIdle()
-        assert((viewModel.uiState.value as HomeUiState.Idle).error != null)
-
-        // When
-        viewModel.dismissError()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        assert((viewModel.uiState.value as HomeUiState.Idle).error == null)
-    }
 }

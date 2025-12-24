@@ -1,11 +1,15 @@
 package dev.igordesouza.shortenurlapp.data.local.datasource
 
 import dev.igordesouza.shortenurlapp.data.local.model.UrlEntity
+import dev.igordesouza.shortenurlapp.domain.model.Url
+import kotlinx.coroutines.flow.Flow
 
 interface UrlShortenerLocalDataSource {
-    suspend fun getRecentlyShortenedUrls(): List<UrlEntity>
+    fun observeUrls(): Flow<List<Url>>
+
     suspend fun saveUrl(url: UrlEntity)
-    suspend fun findByOriginalUrl(originalUrl: String): UrlEntity?
-    suspend fun deleteUrl(url: UrlEntity)
-    suspend fun deleteAllUrls()
+
+    suspend fun delete(url: UrlEntity)
+
+    suspend fun deleteAll()
 }

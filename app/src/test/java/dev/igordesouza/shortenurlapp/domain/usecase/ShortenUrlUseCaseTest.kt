@@ -2,7 +2,7 @@ package dev.igordesouza.shortenurlapp.usecase
 
 import dev.igordesouza.shortenurlapp.domain.model.Url
 import dev.igordesouza.shortenurlapp.domain.repository.UrlRepository
-import dev.igordesouza.shortenurlapp.domain.usecase.ShortenUrlUseCase
+import dev.igordesouza.shortenurlapp.domain.usecase.ShortenUrlUseCaseImpl
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
@@ -16,7 +16,7 @@ class ShortenUrlUseCaseTest {
     fun `when url is blank then return failure`() = runTest {
         // Given
         val urlRepository: UrlRepository = mockk()
-        val useCase = ShortenUrlUseCase(urlRepository)
+        val useCase = ShortenUrlUseCaseImpl(urlRepository)
         val url = ""
 
         // When
@@ -30,7 +30,7 @@ class ShortenUrlUseCaseTest {
     fun `when url already exists then return failure`() = runTest {
         // Given
         val urlRepository: UrlRepository = mockk()
-        val useCase = ShortenUrlUseCase(urlRepository)
+        val useCase = ShortenUrlUseCaseImpl(urlRepository)
         val url = "https://www.google.com"
         coEvery { urlRepository.findByOriginalUrl(url) } returns Url("alias", url, "short")
 
@@ -45,7 +45,7 @@ class ShortenUrlUseCaseTest {
     fun `when url is new then return success`() = runTest {
         // Given
         val urlRepository: UrlRepository = mockk()
-        val useCase = ShortenUrlUseCase(urlRepository)
+        val useCase = ShortenUrlUseCaseImpl(urlRepository)
         val url = "https://www.google.com"
         coEvery { urlRepository.findByOriginalUrl(url) } returns null
         coEvery { urlRepository.shortenUrl(url) } returns flowOf(Result.success(Url("alias", url, "short")))

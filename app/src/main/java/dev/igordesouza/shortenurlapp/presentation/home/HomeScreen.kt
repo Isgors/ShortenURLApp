@@ -1,81 +1,102 @@
 package dev.igordesouza.shortenurlapp.presentation.home
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
+import dev.igordesouza.shortenurlapp.presentation.home.component.UrlActionsBottomSheet
+import dev.igordesouza.shortenurlapp.presentation.home.model.Url
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val listState = rememberLazyListState()
+    val context = LocalContext.current
+
+    var bottomSheetUrl by remember { mutableStateOf<Url?>(null) }
 
     LaunchedEffect(Unit) {
-        viewModel.getRecentlyShortenedUrls()
-    }
+        viewModel.effect.collect { effect ->
+            when (effect) {
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("URL Shortener") }
-            )
-                 },
-        modifier = Modifier.fillMaxSize(),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { paddingValues ->
-        val currentUiState = uiState
-        if (currentUiState is HomeUiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.testTag("LoadingIndicator")
-                )
-            }
-        } else {
-            HomeContent(
-                urls = currentUiState.urls,
-                urlInput = currentUiState.urlInput,
-                isLoading = currentUiState is HomeUiState.Shortening,
-                onUrlInputChange = viewModel::onUrlInputChanged,
-                onShortenUrl = viewModel::shortenUrl,
-                onDeleteUrl = viewModel::deleteUrl,
-                onDeleteAllUrls = viewModel::deleteAllUrls,
-                contentPadding = paddingValues
-            )
-        }
+                is HomeEffect.ShowError ->
+                    snackbarHostState.showSnackbar(effect.message)
 
-        val error by remember { derivedStateOf { (uiState as? HomeUiState.Idle)?.error } }
-        if (error != null) {
-            LaunchedEffect(error) {
-                snackbarHostState.showSnackbar(
-                    message = error!!,
-                    duration = SnackbarDuration.Short
-                )
-                viewModel.dismissError()
+                is HomeEffect.ShowUrlActions ->
+                    bottomSheetUrl = effect.url
+
+                is HomeEffect.CopyUrl -> {
+                    copyToClipboard(
+                        context = context,
+                        label = "Shortened URL",
+                        text = effect.url.shortenedUrl
+                    )
+                    snackbarHostState.showSnackbar("URL copied")
+                    bottomSheetUrl = null
+                }
+
+                is HomeEffect.OpenUrl -> {
+                    openInBrowser(context, effect.url.shortenedUrl)
+                    bottomSheetUrl = null
+                }
+
+                is HomeEffect.ScrollToIndex ->
+                    listState.animateScrollToItem(effect.index)
             }
         }
     }
+
+    bottomSheetUrl?.let { url ->
+        UrlActionsBottomSheet(
+            url = url,
+            onCopyClick = {
+                viewModel.dispatch(HomeIntent.CopyUrlClicked(url))
+            },
+            onOpenClick = {
+                viewModel.dispatch(HomeIntent.OpenUrlClicked(url))
+            },
+            onDismiss = { bottomSheetUrl = null }
+        )
+    }
+
+    HomeContent(
+        state = state,
+        listState = listState,
+        snackbarHostState = snackbarHostState,
+        onIntent = viewModel::dispatch
+    )
 }
+
+fun copyToClipboard(
+    context: Context,
+    label: String,
+    text: String
+) {
+    val clipboard =
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText(label, text)
+    clipboard.setPrimaryClip(clip)
+}
+
+fun openInBrowser(context: Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    context.startActivity(intent)
+}
+
