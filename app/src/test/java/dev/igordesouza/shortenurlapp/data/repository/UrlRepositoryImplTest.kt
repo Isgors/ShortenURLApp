@@ -1,116 +1,110 @@
 package dev.igordesouza.shortenurlapp.data.repository
 
 import dev.igordesouza.shortenurlapp.data.local.datasource.UrlShortenerLocalDataSource
-import dev.igordesouza.shortenurlapp.data.local.model.UrlEntity
-import dev.igordesouza.shortenurlapp.data.mapper.toDomain
+import dev.igordesouza.shortenurlapp.data.mapper.toEntity
 import dev.igordesouza.shortenurlapp.data.remote.datasource.UrlShortenerRemoteDataSource
 import dev.igordesouza.shortenurlapp.data.remote.model.AliasResponse
 import dev.igordesouza.shortenurlapp.data.remote.model.Links
 import dev.igordesouza.shortenurlapp.domain.model.Url
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class UrlRepositoryImplTest {
 
-    @Test
-    fun `when shortenUrl is successful then url is saved and returned`() = runTest {
-        // Given
-        val localDataSource: UrlShortenerLocalDataSource = mockk(relaxed = true)
-        val remoteDataSource: UrlShortenerRemoteDataSource = mockk()
-        val repository = UrlRepositoryImpl(remoteDataSource, localDataSource)
-        val url = "https://www.google.com"
-        val aliasResponse = AliasResponse("alias", Links(url, "short"))
-        coEvery { remoteDataSource.shortenUrl(url) } returns aliasResponse
+    private lateinit var remote: UrlShortenerRemoteDataSource
+    private lateinit var local: UrlShortenerLocalDataSource
+    private lateinit var repository: UrlRepositoryImpl
 
-        // When
-        val result = repository.shortenUrl(url).first()
-
-        // Then
-        coVerify { localDataSource.saveUrl(any()) }
-        assert(result.isSuccess)
+    @Before
+    fun setup() {
+        remote = mockk()
+        local = mockk()
+        repository = UrlRepositoryImpl(remote, local)
     }
 
     @Test
-    fun `when shortenUrl fails then url is not saved and error is returned`() = runTest {
-        // Given
-        val localDataSource: UrlShortenerLocalDataSource = mockk(relaxed = true)
-        val remoteDataSource: UrlShortenerRemoteDataSource = mockk()
-        val repository = UrlRepositoryImpl(remoteDataSource, localDataSource)
-        val url = "https://www.google.com"
-        val exception = Exception("Failed to shorten")
-        coEvery { remoteDataSource.shortenUrl(url) } throws exception
+    fun observeUrls_emitsUrlsFromLocal() = runTest {
+        val urls = listOf(Url("alias", "original", "shortened"))
+        every { local.observeUrls() } returns flowOf(urls)
 
-        // When
-        val result = repository.shortenUrl(url).first()
+        val result = repository.observeUrls().first()
 
-        // Then
-        coVerify(exactly = 0) { localDataSource.saveUrl(any()) }
-        assert(result.isFailure)
+        assertEquals(urls, result)
+        coVerify { local.observeUrls() }
     }
 
     @Test
-    fun `when getRecentlyShortenedUrls is called then local data source is called`() = runTest {
-        // Given
-        val localDataSource: UrlShortenerLocalDataSource = mockk()
-        val remoteDataSource: UrlShortenerRemoteDataSource = mockk()
-        val repository = UrlRepositoryImpl(remoteDataSource, localDataSource)
-        val urlEntities = listOf(UrlEntity("alias", "original", "short"))
-        coEvery { localDataSource.getRecentlyShortenedUrls() } returns urlEntities
+    fun shortenUrl_onSuccess_savesToLocalAndEmitsSuccess() = runTest {
+        val urlStr = "https://google.com"
+        val shortened = "https://short.en/alias"
+        val alias = "alias"
+        val response = AliasResponse(alias, Links(urlStr, shortened))
 
-        // When
-        val result = repository.getRecentlyShortenedUrls()
+        coEvery { remote.shortenUrl(urlStr) } returns response
+        coEvery { local.saveUrl(any()) } returns Unit
 
-        // Then
-        assert(result == urlEntities.map { it.toDomain() })
+        val result = repository.shortenUrl(urlStr).first()
+
+        assertTrue(result.isSuccess)
+        coVerify { remote.shortenUrl(urlStr) }
+        coVerify {
+            local.saveUrl(match {
+                it.alias == alias &&
+                        it.originalUrl == urlStr &&
+                        it.shortenedUrl == shortened
+            })
+        }
     }
 
     @Test
-    fun `when findByOriginalUrl is called then local data source is called`() = runTest {
-        // Given
-        val localDataSource: UrlShortenerLocalDataSource = mockk()
-        val remoteDataSource: UrlShortenerRemoteDataSource = mockk()
-        val repository = UrlRepositoryImpl(remoteDataSource, localDataSource)
-        val originalUrl = "original"
-        val urlEntity = UrlEntity("alias", originalUrl, "short")
-        coEvery { localDataSource.findByOriginalUrl(originalUrl) } returns urlEntity
+    fun shortenUrl_onFailure_emitsFailure() = runTest {
+        val urlStr = "https://google.com"
+        val exception = Exception("Remote error")
+        coEvery { remote.shortenUrl(urlStr) } throws exception
 
-        // When
-        val result = repository.findByOriginalUrl(originalUrl)
+        val result = repository.shortenUrl(urlStr).first()
 
-        // Then
-        assert(result == urlEntity.toDomain())
+        assertTrue(result.isFailure)
+        assertEquals(exception, result.exceptionOrNull())
+        coVerify(exactly = 0) { local.saveUrl(any()) }
     }
 
     @Test
-    fun `when deleteUrl is called then local data source is called`() = runTest {
-        // Given
-        val localDataSource: UrlShortenerLocalDataSource = mockk(relaxed = true)
-        val remoteDataSource: UrlShortenerRemoteDataSource = mockk()
-        val repository = UrlRepositoryImpl(remoteDataSource, localDataSource)
-        val url = Url("alias", "original", "short")
+    fun deleteUrl_callsLocalDelete() = runTest {
+        val alias = "alias"
+        val original = "original"
+        val shortened = "shortened"
+        val url = Url(alias, original, shortened)
+        coEvery { local.delete(any()) } returns Unit
 
-        // When
         repository.deleteUrl(url)
 
-        // Then
-        coVerify { localDataSource.deleteUrl(any()) }
+        coVerify {
+            local.delete(match {
+                it.alias == alias &&
+                        it.originalUrl == original &&
+                        it.shortenedUrl == shortened
+            })
+        }
     }
 
     @Test
-    fun `when deleteAllUrls is called then local data source is called`() = runTest {
-        // Given
-        val localDataSource: UrlShortenerLocalDataSource = mockk(relaxed = true)
-        val remoteDataSource: UrlShortenerRemoteDataSource = mockk()
-        val repository = UrlRepositoryImpl(remoteDataSource, localDataSource)
+    fun deleteAllUrls_callsLocalDeleteAll() = runTest {
+        coEvery { local.deleteAll() } returns Unit
 
-        // When
         repository.deleteAllUrls()
 
-        // Then
-        coVerify { localDataSource.deleteAllUrls() }
+        coVerify { local.deleteAll() }
     }
 }

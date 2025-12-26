@@ -4,13 +4,13 @@ import app.cash.turbine.test
 import dev.igordesouza.shortenurlapp.domain.fakes.FakeData
 import dev.igordesouza.shortenurlapp.domain.fakes.FakeDeleteAllUrlsUseCase
 import dev.igordesouza.shortenurlapp.domain.fakes.FakeDeleteUrlUseCase
-import dev.igordesouza.shortenurlapp.domain.fakes.FakeGetRecentlyShortenedUrlsUseCase
 import dev.igordesouza.shortenurlapp.domain.fakes.FakeObserveUrlsUseCase
 import dev.igordesouza.shortenurlapp.domain.fakes.FakeShortenUrlUseCase
 import dev.igordesouza.shortenurlapp.domain.model.ShortenUrlOutcome
 import dev.igordesouza.shortenurlapp.presentation.home.HomeEffect
 import dev.igordesouza.shortenurlapp.presentation.home.HomeIntent
 import dev.igordesouza.shortenurlapp.presentation.home.HomeViewModel
+import dev.igordesouza.shortenurlapp.presentation.home.model.toPresentation
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -109,7 +109,7 @@ class HomeViewModelTest {
         fakeObserveUrls.emit(urls)
         advanceUntilIdle()
 
-        assertEquals(urls, viewModel.state.value.urls)
+        assertEquals(urls.toPresentation(), viewModel.state.value.urls)
     }
 
 
