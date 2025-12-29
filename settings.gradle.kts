@@ -21,3 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Shorten URL App"
 include(":app")
+include(":orthos")
+include(":orthos:runtime")
+include(":orthos:plugin")
+include(":orthos:core")

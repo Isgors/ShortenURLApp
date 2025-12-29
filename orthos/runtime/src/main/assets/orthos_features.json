@@ -1,0 +1,41 @@
+{
+  "identity": {
+    "appId": "dev.igordesouza.demo",
+    "installId": "*",
+    "userId": null
+  },
+  "signals": {
+    "ROOT": {
+      "signalId": "ROOT",
+      "enabled": true,
+      "weight": 80
+    },
+    "EMULATOR": {
+      "signalId": "EMULATOR",
+      "enabled": true,
+      "weight": 60
+    },
+    "SIGNATURE": {
+      "signalId": "SIGNATURE",
+      "enabled": true,
+      "weight": 100
+    }
+  },
+  "groups": {
+    "ENVIRONMENT": {
+      "type": "ENVIRONMENT",
+      "enabled": true,
+      "defaultWeight": 50
+    },
+    "TAMPERING": {
+      "type": "TAMPERING",
+      "enabled": true,
+      "defaultWeight": 100
+    }
+  },
+  "policy": {
+    "type": "GRADED",
+    "suspiciousThreshold": 60,
+    "tamperedThreshold": 120
+  }
+}

@@ -1,0 +1,34 @@
+plugins {
+    id 'com.android.application'
+    id 'dev.igordesouza.orthos.runtime'
+}
+
+android {
+    namespace "dev.igordesouza.sample"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "dev.igordesouza.sample"
+        minSdk 28
+        targetSdk 34
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:8.5.2")
+    }
+}
