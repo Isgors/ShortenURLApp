@@ -1,18 +1,19 @@
 package dev.igordesouza.orthos.plugin.visitor
 
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.Opcodes
 import dev.igordesouza.orthos.plugin.canary.CanarySeedGenerator
 import dev.igordesouza.orthos.plugin.util.AsmUtils
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.Opcodes
 
 /**
- * Injeta:
- * 1. Um campo estático canary ofuscado
- * 2. Um método que reconstrói o canary em runtime via XOR
+ * Injects a hardened bytecode canary into the target class.
  *
- * Qualquer modificação no bytecode quebra o valor final.
+ * The canary is stored in an obfuscated static field and
+ * reconstructed at runtime via XOR.
+ *
+ * Any bytecode modification breaks the reconstructed value.
  */
-class OrthosCanaryClassVisitor(
+class BytecodeCanaryVisitor(
     api: Int,
     private val className: String,
     next: ClassVisitor
@@ -28,12 +29,14 @@ class OrthosCanaryClassVisitor(
     }
 
     /**
-     * Injeta o campo estático com valor XOR.
+     * Injects the static obfuscated canary field.
+     *
+     * private static final long __orthos_canary;
      */
     private fun injectCanaryField() {
         val obfuscated = seed xor mask
 
-        val field = cv.visitField(
+        cv.visitField(
             Opcodes.ACC_PRIVATE or
                     Opcodes.ACC_STATIC or
                     Opcodes.ACC_FINAL,
@@ -41,19 +44,17 @@ class OrthosCanaryClassVisitor(
             "J",
             null,
             obfuscated
-        )
-        field.visitEnd()
+        ).visitEnd()
     }
 
     /**
-     * Injeta método que reconstitui o canary original em runtime.
+     * Injects a method that reconstructs the canary at runtime.
      *
      * private static long __orthos_canary_value()
      */
     private fun injectCanaryMethod() {
         val mv = cv.visitMethod(
-            Opcodes.ACC_PRIVATE or
-                    Opcodes.ACC_STATIC,
+            Opcodes.ACC_PRIVATE or Opcodes.ACC_STATIC,
             "__orthos_canary_value",
             "()J",
             null,
@@ -62,7 +63,7 @@ class OrthosCanaryClassVisitor(
 
         mv.visitCode()
 
-        // Load obfuscated canary
+        // Load obfuscated value
         mv.visitFieldInsn(
             Opcodes.GETSTATIC,
             className,

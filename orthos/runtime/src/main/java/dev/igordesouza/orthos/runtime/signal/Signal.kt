@@ -2,6 +2,7 @@ package dev.igordesouza.orthos.runtime.signal
 
 import dev.igordesouza.orthos.core.signal.SignalId
 import dev.igordesouza.orthos.core.signal.SignalResult
+import dev.igordesouza.orthos.core.signal.SignalType
 import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
 
 /**
@@ -18,9 +19,14 @@ import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
 interface Signal {
 
     /**
-     * Unique identifier linking this signal to core configuration.
+     * Unique identifier linking this signal to feature configuration.
      */
-    val signalId: SignalId
+    val id: SignalId
+
+    /**
+     * Logical group this signal belongs to.
+     */
+    val type: SignalType
 
     /**
      * Executes the signal detection logic.

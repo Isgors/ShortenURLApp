@@ -1,43 +1,42 @@
 package dev.igordesouza.orthos.runtime.signal.impl
 
-import dev.igordesouza.orthos.runtime.signal.Signal
 import dev.igordesouza.orthos.core.signal.SignalId
 import dev.igordesouza.orthos.core.signal.SignalResult
+import dev.igordesouza.orthos.core.signal.SignalType
 import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
+import dev.igordesouza.orthos.runtime.signal.Signal
 
 /**
- * Detects bytecode tampering by verifying the presence
- * of a build-time injected canary constant.
+ * Verifies bytecode integrity by validating a canary
+ * injected at build time.
  */
-class BytecodeCanarySignal(
-    private val expectedCanary: String
-) : Signal {
+class BytecodeCanarySignal : Signal {
 
-    override val signalId: SignalId = SignalId.BYTECODE_CANARY
+    override val id = SignalId.BYTECODE_CANARY
+    override val type = SignalType.TAMPERING
 
     override fun collect(context: RuntimeSignalContext): SignalResult {
-        val found = verifyCanary()
-
-        return SignalResult(
-            signalId = signalId,
-            triggered = !found,
-            confidence = if (!found) 0.9f else 0.0f,
-            metadata = mapOf(
-                "canaryPresent" to found.toString()
-            )
-        )
-    }
-
-    /**
-     * This method is intentionally simple.
-     * If the constant is stripped or altered,
-     * the optimizer or repackager likely touched the bytecode.
-     */
-    private fun verifyCanary(): Boolean {
         return try {
-            expectedCanary.isNotBlank()
-        } catch (_: Throwable) {
-            false
+            val method = context.applicationContext
+                .javaClass
+                .getDeclaredMethod("__orthos_canary_value")
+
+            method.isAccessible = true
+            val value = method.invoke(null) as Long
+
+            SignalResult(
+                signalId = id,
+                signalType = type,
+                triggered = value == 0L,
+                confidence = 1.0f
+            )
+        } catch (t: Throwable) {
+            SignalResult(
+                signalId = id,
+                signalType = type,
+                triggered = true,
+                confidence = 1.0f
+            )
         }
     }
 }

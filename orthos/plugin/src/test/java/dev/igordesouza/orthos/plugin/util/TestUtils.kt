@@ -1,6 +1,5 @@
 package dev.igordesouza.orthos.plugin.util
 
-import dev.igordesouza.orthos.plugin.OrthosAsmVisitorFactory
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 

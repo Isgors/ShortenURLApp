@@ -1,6 +1,5 @@
 package dev.igordesouza.orthos.plugin.unit
 
-import dev.igordesouza.orthos.plugin.OrthosAsmVisitorFactory
 import org.objectweb.asm.ClassWriter
 import kotlin.test.Test
 import kotlin.test.assertNotNull

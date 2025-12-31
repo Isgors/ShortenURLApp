@@ -2,9 +2,9 @@ package dev.igordesouza.orthos.runtime.signal.impl
 
 import android.os.Build
 import dev.igordesouza.orthos.runtime.signal.Signal
-import dev.igordesouza.orthos.runtime.signal.SignalContext
 import dev.igordesouza.orthos.core.signal.SignalId
 import dev.igordesouza.orthos.core.signal.SignalResult
+import dev.igordesouza.orthos.core.signal.SignalType
 import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
 
 /**
@@ -15,13 +15,15 @@ import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
  */
 class EmulatorSignal : Signal {
 
-    override val signalId: SignalId = SignalId.EMULATOR
+    override val id: SignalId = SignalId.EMULATOR
+    override val type = SignalType.ENVIRONMENT
 
     override fun collect(context: RuntimeSignalContext): SignalResult {
         val triggered = isProbablyEmulator()
 
         return SignalResult(
-            signalId = signalId,
+            signalId = id,
+            signalType = type,
             triggered = triggered,
             confidence = if (triggered) 0.85f else 0.0f,
             metadata = if (triggered) {

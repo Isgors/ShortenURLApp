@@ -10,8 +10,6 @@ import android.content.Context
  * - local development
  * - demos
  * - tests
- *
- * ⚠️ Not suitable for production environments.
  */
 internal class RemoteFeatureJsonProviderImpl(
     private val context: Context,

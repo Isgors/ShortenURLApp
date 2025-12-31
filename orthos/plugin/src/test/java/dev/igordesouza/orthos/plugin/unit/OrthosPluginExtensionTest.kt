@@ -1,6 +1,6 @@
 package dev.igordesouza.orthos.plugin.unit
 
-import dev.igordesouza.orthos.plugin.OrthosPluginExtension
+import dev.igordesouza.orthos.plugin.extension.OrthosPluginExtension
 import org.gradle.testfixtures.ProjectBuilder
 import kotlin.test.Test
 import kotlin.test.assertEquals

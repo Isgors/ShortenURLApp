@@ -1,9 +1,9 @@
 package dev.igordesouza.orthos.runtime.signal.impl
 
 import dev.igordesouza.orthos.runtime.signal.Signal
-import dev.igordesouza.orthos.runtime.signal.SignalContext
 import dev.igordesouza.orthos.core.signal.SignalId
 import dev.igordesouza.orthos.core.signal.SignalResult
+import dev.igordesouza.orthos.core.signal.SignalType
 import java.io.File
 import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
 
@@ -18,7 +18,8 @@ import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
  */
 class RootSignal : Signal {
 
-    override val signalId: SignalId = SignalId.ROOT
+    override val id: SignalId = SignalId.ROOT
+    override val type: SignalType = SignalType.RUNTIME
 
     private val knownRootPaths = listOf(
         "/system/bin/su",
@@ -35,7 +36,8 @@ class RootSignal : Signal {
         }
 
         return SignalResult(
-            signalId = signalId,
+            signalId = id,
+            signalType = type,
             triggered = triggered,
             confidence = if (triggered) 0.9f else 0.0f,
             metadata = if (triggered) {

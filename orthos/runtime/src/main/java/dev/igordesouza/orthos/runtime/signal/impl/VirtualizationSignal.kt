@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import dev.igordesouza.orthos.runtime.signal.Signal
 import dev.igordesouza.orthos.core.signal.SignalId
 import dev.igordesouza.orthos.core.signal.SignalResult
+import dev.igordesouza.orthos.core.signal.SignalType
 import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
 import java.io.File
 
@@ -18,7 +19,9 @@ import java.io.File
  */
 class VirtualizationSignal : Signal {
 
-    override val signalId: SignalId = SignalId.VIRTUALIZATION
+    override val id: SignalId = SignalId.VIRTUALIZATION
+
+    override val type = SignalType.RUNTIME
 
     private val knownVirtualizationPackages = listOf(
         "com.lbe.parallel.intl",
@@ -41,7 +44,8 @@ class VirtualizationSignal : Signal {
         val triggered = packageTriggered || pathTriggered
 
         return SignalResult(
-            signalId = signalId,
+            signalId = id,
+            signalType = type,
             triggered = triggered,
             confidence = when {
                 packageTriggered && pathTriggered -> 0.95f

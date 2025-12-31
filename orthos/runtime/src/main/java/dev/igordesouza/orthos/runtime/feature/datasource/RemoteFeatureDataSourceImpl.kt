@@ -20,13 +20,3 @@ internal class RemoteFeatureDataSourceImpl(
         return json.decodeFromString(raw)
     }
 }
-
-
-//class RemoteFeatureDataSourceImpl(
-//    private val jsonProvider: suspend () -> String
-//) : RemoteFeatureDataSource {
-//
-//    override suspend fun fetch(): FeatureSnapshot {
-//        return Json.decodeFromString(jsonProvider())
-//    }
-//}

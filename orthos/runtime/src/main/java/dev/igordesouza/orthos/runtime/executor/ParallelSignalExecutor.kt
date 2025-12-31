@@ -2,6 +2,7 @@ package dev.igordesouza.orthos.runtime.executor
 
 import dev.igordesouza.orthos.core.signal.SignalId
 import dev.igordesouza.orthos.core.signal.SignalResult
+import dev.igordesouza.orthos.core.signal.SignalType
 import dev.igordesouza.orthos.runtime.context.RuntimeSignalContext
 import dev.igordesouza.orthos.runtime.signal.Signal
 import java.util.concurrent.Executors
@@ -33,6 +34,7 @@ class ParallelSignalExecutor(
             } catch (t: Throwable) {
                 SignalResult(
                     signalId = SignalId.UNKNOWN,
+                    signalType = SignalType.RUNTIME,
                     triggered = true,
                     confidence = 0.5f,
                     metadata = mapOf("executorError" to t.message.orEmpty())

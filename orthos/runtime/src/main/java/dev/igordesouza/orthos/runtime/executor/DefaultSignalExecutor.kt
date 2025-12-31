@@ -18,7 +18,7 @@ class DefaultSignalExecutor : SignalExecutor {
                 signal.collect(context)
             } catch (t: Throwable) {
                 SignalResult(
-                    signalId = signal.signalId,
+                    signalId = signal.id,
                     triggered = true,
                     confidence = 0.5f,
                     metadata = mapOf(

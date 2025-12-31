@@ -10,13 +10,23 @@
       "enabled": true,
       "weight": 80
     },
+    "CLONE": {
+      "signalId": "CLONE_APP",
+      "enabled": true,
+      "weight": 80
+    },
     "EMULATOR": {
       "signalId": "EMULATOR",
       "enabled": true,
-      "weight": 60
+      "weight": 100
     },
-    "SIGNATURE": {
-      "signalId": "SIGNATURE",
+    "VIRTUALIZATION": {
+      "signalId": "VIRTUALIZATION",
+      "enabled": true,
+      "weight": 100
+    },
+    "BYTECODE_CANARY": {
+      "signalId": "BYTECODE_CANARY",
       "enabled": true,
       "weight": 100
     }
@@ -34,8 +44,8 @@
     }
   },
   "policy": {
-    "type": "GRADED",
-    "suspiciousThreshold": 60,
-    "tamperedThreshold": 120
+    "type": "STRICT",
+    "threshold": 100
   }
 }
+
