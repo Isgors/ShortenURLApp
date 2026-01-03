@@ -16,7 +16,7 @@ java {
 gradlePlugin {
     plugins {
         create("orthosRuntime") {
-            id = "dev.igordesouza.orthos.runtime"
+            id = "dev.igordesouza.orthos.plugin"
             implementationClass =
                 "dev.igordesouza.orthos.plugin.OrthosRuntimePlugin"
         }

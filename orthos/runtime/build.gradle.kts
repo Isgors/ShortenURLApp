@@ -1,5 +1,6 @@
-group = "dev.igordesouza.orthos"
-version = "1.0.0"
+group = property("GROUP")!!
+version = property("VERSION_NAME")!!
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -35,7 +36,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("androidx.datastore:datastore-core:1.2.0")
     implementation("androidx.datastore:datastore-preferences:1.2.0")
