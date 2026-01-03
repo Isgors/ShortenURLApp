@@ -11,5 +11,5 @@ internal object NativeAgreement {
         System.loadLibrary("orthos")
     }
 
-    external fun nativeValue(): Int
+    external fun nativeValue(): Long
 }

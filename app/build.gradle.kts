@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
+    id("dev.igordesouza.orthos.runtime")
 }
 
 
@@ -26,8 +27,8 @@ android {
         buildConfigField("String", "BASE_URL", "\"https://url-shortener-server.onrender.com/\"")
     }
 
-    // 1. Load the keystore properties
-    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    // Load the keystore properties from the app directory
+    val keystorePropertiesFile = project.file("keystore.properties")
     val keystoreProperties = Properties()
     if (keystorePropertiesFile.exists()) {
         keystoreProperties.load(FileInputStream(keystorePropertiesFile))
@@ -37,13 +38,11 @@ android {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
             keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+            // This ensures it looks for the .jks file relative to the app folder
+            storeFile = keystoreProperties["storeFile"]?.let { project.file(it as String) }
             storePassword = keystoreProperties["storePassword"] as String?
         }
     }
-
-
-
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
@@ -52,16 +51,22 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
+                file("$buildDir/generated/orthos/orthos-rules.pro")
             )
+
+            manifestPlaceholders["android.experimental.art-profile"] = false
+            installation {
+                enableBaselineProfile = false
+            }
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -71,6 +76,12 @@ android {
     room {
         schemaDirectory("$projectDir/schemas")
     }
+
+    orthos {
+        enabled = true
+        enabledBuildTypes = setOf("release")
+    }
+
 }
 
 dependencies {

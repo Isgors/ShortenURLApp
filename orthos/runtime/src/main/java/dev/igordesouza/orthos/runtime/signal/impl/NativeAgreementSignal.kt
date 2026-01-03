@@ -22,7 +22,7 @@ class NativeAgreementSignal : Signal {
                 .getDeclaredMethod("__orthos_native_agreement")
 
             expectedMethod.isAccessible = true
-            val expected = expectedMethod.invoke(null) as Int
+            val expected = expectedMethod.invoke(null) as Long
 
             val actual = NativeAgreement.nativeValue()
 

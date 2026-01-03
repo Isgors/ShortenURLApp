@@ -1,5 +1,6 @@
 package dev.igordesouza.orthos.plugin.visitor
 
+import org.gradle.api.file.RegularFileProperty
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Opcodes
 
@@ -12,14 +13,25 @@ import org.objectweb.asm.Opcodes
 class NativeAgreementVisitor(
     api: Int,
     private val className: String,
+    private val keepRegistryFile: RegularFileProperty,
     next: ClassVisitor
 ) : ClassVisitor(api, next) {
 
-    private val agreementValue: Long = 0xCAFEBABE
+    private val agreementValue: Long = 0xCAFEBABEL
 
     override fun visitEnd() {
+        registerKeep()
         injectNativeAgreement()
         super.visitEnd()
+    }
+
+    /**
+     * Registers this class in the keep-registry.
+     */
+    private fun registerKeep() {
+        val file = keepRegistryFile.get().asFile
+        file.parentFile.mkdirs()
+        file.appendText("$className\n")
     }
 
     /**
@@ -27,17 +39,17 @@ class NativeAgreementVisitor(
      */
     private fun injectNativeAgreement() {
         val mv = cv.visitMethod(
-            Opcodes.ACC_PRIVATE or Opcodes.ACC_STATIC,
+            Opcodes.ACC_PRIVATE or Opcodes.ACC_STATIC or Opcodes.ACC_SYNTHETIC,
             "__orthos_native_agreement",
-            "()I",
+            "()J",
             null,
             null
         )
 
         mv.visitCode()
         mv.visitLdcInsn(agreementValue)
-        mv.visitInsn(Opcodes.IRETURN)
-        mv.visitMaxs(1, 0)
+        mv.visitInsn(Opcodes.LRETURN)
+        mv.visitMaxs(2, 0)
         mv.visitEnd()
     }
 }

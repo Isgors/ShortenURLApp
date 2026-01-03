@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    kotlin("jvm")
+    id("org.jetbrains.kotlin.jvm") version "2.2.21"
     `java-gradle-plugin`
 }
 
@@ -9,7 +9,7 @@ version = "1.0.0"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
@@ -27,13 +27,15 @@ dependencies {
     implementation("org.ow2.asm:asm:9.9.1")
     implementation("org.ow2.asm:asm-commons:9.9.1")
     implementation("org.ow2.asm:asm-util:9.9.1")
+    compileOnly("com.android.tools.build:gradle:8.12.1")
+    implementation(kotlin("stdlib"))
     testImplementation(libs.junit)
     testImplementation(gradleTestKit())
     testImplementation(kotlin("test"))
     // Android Gradle Plugin API
-    implementation("com.android.tools.build:gradle-api:8.5.2")
+    implementation("com.android.tools.build:gradle-api:8.12.1")
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
 }

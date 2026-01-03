@@ -1,4 +1,6 @@
 pluginManagement {
+    includeBuild("orthos")
+
     repositories {
         google {
             content {
@@ -11,6 +13,9 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+includeBuild("orthos")
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -21,7 +26,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Shorten URL App"
 include(":app")
-include(":orthos")
-include(":orthos:runtime")
-include(":orthos:plugin")
-include(":orthos:core")

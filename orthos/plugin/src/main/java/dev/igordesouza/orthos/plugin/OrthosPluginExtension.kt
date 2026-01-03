@@ -1,4 +1,4 @@
-package dev.igordesouza.orthos.plugin.extension
+package dev.igordesouza.orthos.plugin
 
 /**
  * Public configuration surface for the Orthos plugin.
