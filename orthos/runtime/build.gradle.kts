@@ -38,10 +38,10 @@ android {
 
 dependencies {
     api(project(":core"))
-    implementation("com.jakewharton.timber:timber:5.0.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation("androidx.datastore:datastore-core:1.2.0")
-    implementation("androidx.datastore:datastore-preferences:1.2.0")
+    implementation(libs.timber)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.core)
 
     implementation(libs.androidx.core.ktx)
