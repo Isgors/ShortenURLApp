@@ -185,7 +185,7 @@ fun HomeContent(
                             key = { it.alias }
                         ) { url ->
                             UrlItem(
-                                modifier = Modifier.testTag("UrlItem_${url.alias}"),
+                                modifier = Modifier.testTag("UrlItem_${url.originalUrl}"),
                                 url = url,
                                 isDeleteEnabled = true,
                                 onDelete = {

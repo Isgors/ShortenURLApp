@@ -37,7 +37,7 @@ fun UrlItem(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable(onClick = onClick)
-            .testTag("UrlItem_${url.alias}")
+//            .testTag("UrlItemClickable_${url.alias}")
             .semantics {
                 contentDescription = "Shortened URL item"
             },

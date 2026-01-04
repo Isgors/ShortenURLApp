@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.ManagedVirtualDevice
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -14,12 +16,15 @@ android {
 
     defaultConfig {
         applicationId = "dev.igordesouza.shortenurlapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments += mapOf(
+            "clearPackageData" to "true"
+        )
         buildConfigField("String", "BASE_URL", "\"https://url-shortener-server.onrender.com/\"")
     }
 
@@ -47,9 +52,24 @@ android {
     room {
         schemaDirectory("$projectDir/schemas")
     }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+
+        managedDevices.allDevices {
+            create<ManagedVirtualDevice>("pixel5Api30") {
+                device = "Pixel 5"
+                apiLevel = 30
+                systemImageSource = "aosp"
+            }
+        }
+    }
+
+
 }
 
 dependencies {
+    androidTestUtil(libs.androidx.orchestrator)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -76,12 +96,14 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
+    androidTestImplementation(libs.androidx.uiautomator)
+    androidTestImplementation(libs.androidx.rules)
+//    androidTestImplementation(libs.androidx.runner)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+//    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.uiautomator)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

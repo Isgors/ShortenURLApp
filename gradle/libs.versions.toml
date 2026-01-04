@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.1"
+agp = "8.12.1"
 kotlin = "2.2.21"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -9,18 +9,25 @@ lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.12.1"
 composeBom = "2025.12.00"
 composeMaterialIcons = "1.7.8"
-uiautomator = "2.4.0-alpha07"
 koin = "4.1.1"
 coroutines = "1.10.2"
 mockk = "1.14.7"
 ktor = "3.3.3"
+orchestrator = "1.4.2"
 room = "2.8.4"
 ksp = "2.3.3"
+rules = "1.5.0"
+runner = "1.5.2"
+uiautomatorVersion = "2.3.0"
 uiTest = "1.10.0"
 turbine = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestrator" }
+androidx-rules = { module = "androidx.test:rules", version.ref = "rules" }
+androidx-runner = { module = "androidx.test:runner", version.ref = "runner" }
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomatorVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -35,7 +42,6 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-materialIcons = { module = "androidx.compose.material:material-icons-core", version.ref = "composeMaterialIcons" }
-androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 koin-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
