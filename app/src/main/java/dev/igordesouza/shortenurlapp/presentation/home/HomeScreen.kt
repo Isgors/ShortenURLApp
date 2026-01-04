@@ -19,11 +19,12 @@ import androidx.compose.ui.platform.LocalContext
 import dev.igordesouza.shortenurlapp.presentation.home.component.UrlActionsBottomSheet
 import dev.igordesouza.shortenurlapp.presentation.home.model.Url
 import androidx.core.net.toUri
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }

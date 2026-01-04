@@ -1,6 +1,5 @@
 package dev.igordesouza.orthos.runtime.feature
 
-import dev.igordesouza.orthos.core.feature.FeatureSnapshot
 import dev.igordesouza.orthos.core.identity.ClientIdentity
 
 /**

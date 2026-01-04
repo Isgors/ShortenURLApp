@@ -48,9 +48,9 @@ class VirtualizationSignal : Signal {
             signalType = type,
             triggered = triggered,
             confidence = when {
-                packageTriggered && pathTriggered -> 0.95f
-                packageTriggered || pathTriggered -> 0.7f
-                else -> 0.0f
+                packageTriggered && pathTriggered -> 0.95
+                packageTriggered || pathTriggered -> 0.7
+                else -> 0.0
             },
             metadata = buildMetadata(packageTriggered, pathTriggered)
         )

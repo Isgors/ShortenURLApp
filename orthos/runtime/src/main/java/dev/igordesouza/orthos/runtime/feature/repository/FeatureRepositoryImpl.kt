@@ -1,6 +1,6 @@
 package dev.igordesouza.orthos.runtime.feature.repository
 
-import dev.igordesouza.orthos.core.feature.FeatureSnapshot
+import dev.igordesouza.orthos.runtime.feature.FeatureSnapshot
 
 import dev.igordesouza.orthos.core.identity.ClientIdentity
 import dev.igordesouza.orthos.runtime.feature.datasource.LocalFeatureDataSource

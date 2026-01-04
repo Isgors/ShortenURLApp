@@ -1,7 +1,7 @@
 package dev.igordesouza.orthos.plugin.internal
 
 import java.io.RandomAccessFile
-import java.nio.channels.FileChannel
+import java.nio.ByteBuffer
 
 /**
  * Thread-safe and process-safe file appender.
@@ -11,17 +11,24 @@ import java.nio.channels.FileChannel
  */
 object LockedFileAppender {
 
-    fun appendLine(file: java.io.File, line: String) {
+    fun append(file: java.io.File, line: String) {
         file.parentFile.mkdirs()
 
-        RandomAccessFile(file, "rw").use { raf ->
-            val channel: FileChannel = raf.channel
-
+        RandomAccessFile(file, "rw").channel.use { channel ->
             channel.lock().use {
-                raf.seek(raf.length())
-                raf.writeBytes(line)
-                raf.writeBytes("\n")
+                channel.position(channel.size())
+                channel.write(ByteBuffer.wrap(line.toByteArray()))
+                channel.force(true)
             }
         }
+//        RandomAccessFile(file, "rw").use { raf ->
+//            val channel: FileChannel = raf.channel
+//
+//            channel.lock().use {
+//                raf.seek(raf.length())
+//                raf.writeBytes(line)
+//                raf.writeBytes("\n")
+//            }
+//        }
     }
 }

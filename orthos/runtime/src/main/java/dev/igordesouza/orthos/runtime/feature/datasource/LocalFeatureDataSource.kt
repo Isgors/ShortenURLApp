@@ -1,6 +1,6 @@
 package dev.igordesouza.orthos.runtime.feature.datasource
 
-import dev.igordesouza.orthos.core.feature.FeatureSnapshot
+import dev.igordesouza.orthos.runtime.feature.FeatureSnapshot
 
 /**
  * Local offline-first storage for feature configuration.

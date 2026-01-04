@@ -23,3 +23,8 @@
 # Keep all public Orthos API
 -keep class dev.igordesouza.orthos.runtime.** { *; }
 -keep class dev.igordesouza.orthos.core.** { *; }
+-assumenosideeffects class timber.log.Timber {
+    public static *** v(...);
+    public static *** d(...);
+    public static *** i(...);
+}

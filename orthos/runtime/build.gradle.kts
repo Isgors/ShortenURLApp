@@ -4,6 +4,7 @@ version = property("VERSION_NAME")!!
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -13,7 +14,7 @@ android {
         minSdk = 28
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
+        consumerProguardFiles("consumer-rules.pro","orthos-runtime.pro")
     }
 
     buildTypes {
@@ -37,6 +38,7 @@ android {
 
 dependencies {
     api(project(":core"))
+    implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("androidx.datastore:datastore-core:1.2.0")
     implementation("androidx.datastore:datastore-preferences:1.2.0")

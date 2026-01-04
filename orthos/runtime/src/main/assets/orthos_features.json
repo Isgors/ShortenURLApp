@@ -1,51 +1,32 @@
 {
   "identity": {
-    "appId": "dev.igordesouza.demo",
-    "installId": "*",
+    "appId": "dev.igordesouza.shortenurlapp installId",
+    "installId": "76d756bb-9822-4ef3-86b7-850a5ecef649",
     "userId": null
   },
   "signals": {
-    "ROOT": {
-      "signalId": "ROOT",
-      "enabled": true,
-      "weight": 80
-    },
-    "CLONE": {
+    "CLONE_APP": {
       "signalId": "CLONE_APP",
       "enabled": true,
-      "weight": 80
+      "weight": 100
     },
     "EMULATOR": {
       "signalId": "EMULATOR",
       "enabled": true,
       "weight": 100
-    },
-    "VIRTUALIZATION": {
-      "signalId": "VIRTUALIZATION",
-      "enabled": true,
-      "weight": 100
-    },
-    "BYTECODE_CANARY": {
-      "signalId": "BYTECODE_CANARY",
-      "enabled": true,
-      "weight": 100
     }
   },
   "groups": {
-    "ENVIRONMENT": {
-      "type": "ENVIRONMENT",
+    "RUNTIME": {
+      "type": "RUNTIME",
       "enabled": true,
-      "defaultWeight": 50
-    },
-    "TAMPERING": {
-      "type": "TAMPERING",
-      "enabled": true,
-      "defaultWeight": 100
+      "defaultWeight": 80
     }
   },
   "policy": {
-    "type": "STRICT",
-    "threshold": 100
+    "type": "GRADED",
+    "tamperedThreshold": 85,
+    "suspiciousThreshold": 40
   }
 }
 

@@ -30,14 +30,14 @@ class NativeAgreementSignal : Signal {
                 signalId = id,
                 signalType = type,
                 triggered = expected != actual,
-                confidence = 1.0f
+                confidence = 1.0
             )
         } catch (t: Throwable) {
             SignalResult(
                 signalId = id,
                 signalType = type,
                 triggered = true,
-                confidence = 1.0f
+                confidence = 1.0
             )
         }
     }

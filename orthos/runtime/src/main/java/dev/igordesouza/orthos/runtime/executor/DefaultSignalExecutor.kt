@@ -19,8 +19,9 @@ class DefaultSignalExecutor : SignalExecutor {
             } catch (t: Throwable) {
                 SignalResult(
                     signalId = signal.id,
+                    signalType = signal.type,
                     triggered = true,
-                    confidence = 0.5f,
+                    confidence = 0.5,
                     metadata = mapOf(
                         "error" to (t.message ?: "unknown")
                     )

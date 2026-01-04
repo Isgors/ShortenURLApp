@@ -44,11 +44,6 @@ abstract class GenerateOrthosProguardRulesTask : DefaultTask() {
                     # ==========================================
                     # Orthos Runtime – Auto-generated Proguard
                     # ==========================================
-
-                    # Keep injected canary method
-                    -keepclassmembers class dev.igordesouza.** {
-                        long __orthos_canary_value();
-                    }
                     
                     # Keep injected native canary method
                     -keepclassmembers class dev.igordesouza.** {

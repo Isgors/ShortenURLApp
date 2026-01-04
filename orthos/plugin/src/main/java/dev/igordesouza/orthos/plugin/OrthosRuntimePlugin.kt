@@ -29,6 +29,9 @@ class OrthosRuntimePlugin : Plugin<Project> {
 
             val currentBuildType = variant.buildType ?: ""
 
+            project.logger.error("ORTHOS: onVariants CALLED for ${variant.name}")
+
+
             if (currentBuildType in extension.enabledBuildTypes) {
                 project.logger.lifecycle("Orthos ENABLED for variant: ${variant.name} (BuildType: $currentBuildType)")
 
@@ -50,8 +53,6 @@ class OrthosRuntimePlugin : Plugin<Project> {
                 ) { task ->
                     task.outputFile.set(keepRegistryFile)
                 }
-
-
 
                 // Register ASM instrumentation
                 variant.instrumentation.transformClassesWith(

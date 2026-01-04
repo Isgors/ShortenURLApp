@@ -1,7 +1,6 @@
 package dev.igordesouza.orthos.core.policy
 
 import dev.igordesouza.orthos.core.verdict.RuntimeState
-import dev.igordesouza.orthos.core.policy.WeightedPolicy
 import dev.igordesouza.orthos.core.signal.SignalId
 import dev.igordesouza.orthos.core.signal.SignalResult
 import kotlin.test.Test
@@ -11,7 +10,7 @@ class WeightedDetectionPolicyTest {
 
     @Test
     fun `score above threshold results in tampered`() {
-        val policy = WeightedPolicy(threshold = 50)
+        val policy = WeightedDetectionPolicy(threshold = 50)
 
         val verdict = policy.evaluate(
             listOf(
@@ -28,7 +27,7 @@ class WeightedDetectionPolicyTest {
 
     @Test
     fun `score below threshold results in safe`() {
-        val policy = WeightedPolicy(threshold = 90)
+        val policy = WeightedDetectionPolicy(threshold = 90)
 
         val verdict = policy.evaluate(
             listOf(

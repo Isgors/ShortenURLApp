@@ -28,14 +28,14 @@ class BytecodeCanarySignal : Signal {
                 signalId = id,
                 signalType = type,
                 triggered = value == 0L,
-                confidence = 1.0f
+                confidence = 1.0
             )
         } catch (t: Throwable) {
             SignalResult(
                 signalId = id,
                 signalType = type,
                 triggered = true,
-                confidence = 1.0f
+                confidence = 1.0
             )
         }
     }

@@ -25,7 +25,7 @@ class EmulatorSignal : Signal {
             signalId = id,
             signalType = type,
             triggered = triggered,
-            confidence = if (triggered) 0.85f else 0.0f,
+            confidence = if (triggered) 0.85 else 0.0,
             metadata = if (triggered) {
                 mapOf(
                     "fingerprint" to Build.FINGERPRINT,

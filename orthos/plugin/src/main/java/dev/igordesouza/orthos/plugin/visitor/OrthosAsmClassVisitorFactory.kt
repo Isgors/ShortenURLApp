@@ -3,6 +3,7 @@ package dev.igordesouza.orthos.plugin.visitor
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.ClassContext
 import com.android.build.api.instrumentation.ClassData
+import dev.igordesouza.orthos.plugin.internal.LockedFileAppender
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Opcodes
 
@@ -13,25 +14,27 @@ import org.objectweb.asm.Opcodes
  * It only composes visitors in the correct order.
  *
  * Order (outer → inner):
- * 1. SignatureVisitor
- * 2. NativeAgreementVisitor
- * 3. BytecodeCanaryVisitor
+ * 1. NativeAgreementVisitor
+ * 2. BytecodeCanaryVisitor
  */
 abstract class OrthosAsmClassVisitorFactory :
     AsmClassVisitorFactory<OrthosInstrumentationParams> {
 
-    override fun isInstrumentable(classData: ClassData): Boolean =
-        classData.className.startsWith("dev/igordesouza/")
+    override fun isInstrumentable(classData: ClassData): Boolean {
+        return classData.className == "dev.igordesouza.shortenurlapp.MainApplication" ||
+                classData.className == "dev.igordesouza.shortenurlapp.presentation.MainActivity"
+    }
 
     override fun createClassVisitor(
         classContext: ClassContext,
-        next: ClassVisitor
+        nextClassVisitor: ClassVisitor
     ): ClassVisitor {
+        println("ORTHOS ASM visiting: ${classContext.currentClassData.className}")
 
         val className = classContext.currentClassData.className
         val keepRegistryFile = parameters.get().keepRegistryFile
 
-        var visitor: ClassVisitor = next
+        var visitor: ClassVisitor = nextClassVisitor
 
         // 3️⃣ Bytecode Canary (must be last)
         visitor = BytecodeCanaryVisitor(
@@ -49,7 +52,17 @@ abstract class OrthosAsmClassVisitorFactory :
             next = visitor
         )
 
-        return visitor
+        // 🔴 CAMADA FINAL: garante registro SEMPRE
+        return object : ClassVisitor(Opcodes.ASM9, visitor) {
+            override fun visitEnd() {
+                LockedFileAppender.append(
+                    keepRegistryFile.get().asFile,
+                    "$className\n"
+                )
+                super.visitEnd()
+            }
+        }
+
     }
 }
 

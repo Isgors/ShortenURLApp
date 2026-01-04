@@ -7,5 +7,5 @@ data class OrthosVerdictUiState(
     val isLoading: Boolean = true,
     val verdict: OrthosVerdict? = null
 ) {
-    val state: RuntimeState? get() = verdict?.state
+    val runtimeState: RuntimeState? get() = verdict?.state
 }

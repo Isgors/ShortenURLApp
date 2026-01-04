@@ -19,6 +19,7 @@ object FeatureRepositoryFactory {
 
         val json = Json {
             ignoreUnknownKeys = true
+            classDiscriminator = "type"
         }
 
         val jsonProvider = remoteJsonProvider

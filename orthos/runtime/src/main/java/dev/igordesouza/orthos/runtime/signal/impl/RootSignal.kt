@@ -39,7 +39,7 @@ class RootSignal : Signal {
             signalId = id,
             signalType = type,
             triggered = triggered,
-            confidence = if (triggered) 0.9f else 0.0f,
+            confidence = if (triggered) 0.9 else 0.0,
             metadata = if (triggered) {
                 mapOf("reason" to "known root path detected")
             } else {

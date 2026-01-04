@@ -13,6 +13,6 @@ data class SignalResult(
     val signalId: SignalId,
     val signalType: SignalType,
     val triggered: Boolean,
-    val confidence: Float,
+    val confidence: Double,
     val metadata: Map<String, String> = emptyMap()
 )

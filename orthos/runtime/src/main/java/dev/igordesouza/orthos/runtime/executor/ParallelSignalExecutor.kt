@@ -36,7 +36,7 @@ class ParallelSignalExecutor(
                     signalId = SignalId.UNKNOWN,
                     signalType = SignalType.RUNTIME,
                     triggered = true,
-                    confidence = 0.5f,
+                    confidence = 0.5,
                     metadata = mapOf("executorError" to t.message.orEmpty())
                 )
             }

@@ -85,7 +85,10 @@ android {
 }
 
 dependencies {
+    implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("dev.igordesouza.orthos:runtime:0.1.0")
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

@@ -29,7 +29,7 @@ class CloneAppSignal : Signal {
             signalId = id,
             signalType = type,
             triggered = triggered,
-            confidence = if (triggered) 0.8f else 0.0f,
+            confidence = if (triggered) 0.8 else 0.0,
             metadata = if (triggered) {
                 mapOf(
                     "dataDir" to appDataDir
