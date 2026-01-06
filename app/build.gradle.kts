@@ -22,9 +22,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         testInstrumentationRunnerArguments += mapOf(
+            // Default behavior: run only release-gate tests
+            "category" to "dev.igordesouza.shortenurlapp.tags.ReleaseGate",
+            // Always exclude flaky tests unless explicitly requested
+            "notCategory" to "dev.igordesouza.shortenurlapp.tags.Flaky",
             "clearPackageData" to "true"
         )
+
         buildConfigField("String", "BASE_URL", "\"https://url-shortener-server.onrender.com/\"")
     }
 
@@ -55,17 +61,35 @@ android {
 
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
+        managedDevices {
+            allDevices {
+                // Fast feedback device (release gate)
+                maybeCreate<ManagedVirtualDevice>("pixel6Api34").apply {
+                    device = "Pixel 6"
+                    apiLevel = 34
+                    systemImageSource = "aosp"
+                }
 
-        managedDevices.allDevices {
-            create<ManagedVirtualDevice>("pixel5Api30") {
-                device = "Pixel 5"
-                apiLevel = 30
-                systemImageSource = "aosp"
+                // Lower API (compat regression)
+                maybeCreate<ManagedVirtualDevice>("pixel4Api30").apply {
+                    device = "Pixel 4"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+            }
+
+            groups {
+                maybeCreate("releaseGateDevices").apply {
+                    targetDevices.add(allDevices["pixel6Api34"])
+                }
+
+                maybeCreate("fullMatrixDevices").apply {
+                    targetDevices.add(allDevices["pixel6Api34"])
+                    targetDevices.add(allDevices["pixel4Api30"])
+                }
             }
         }
     }
-
-
 }
 
 dependencies {
@@ -96,12 +120,11 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     androidTestImplementation(libs.androidx.uiautomator)
     androidTestImplementation(libs.androidx.rules)
-//    androidTestImplementation(libs.androidx.runner)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.androidx.junit)
-//    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)

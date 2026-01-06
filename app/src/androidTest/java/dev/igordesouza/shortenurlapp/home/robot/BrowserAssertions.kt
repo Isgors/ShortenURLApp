@@ -1,5 +1,6 @@
-package dev.igordesouza.shortenurlapp.robot
+package dev.igordesouza.shortenurlapp.home.robot
 
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 
@@ -16,7 +17,7 @@ object BrowserAssertions {
         val opened = knownBrowsers.any { pkg ->
             device.wait(
                 Until.hasObject(
-                    androidx.test.uiautomator.By.pkg(pkg).depth(0)
+                    By.pkg(pkg).depth(0)
                 ),
                 5_000
             )

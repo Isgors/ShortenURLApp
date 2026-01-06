@@ -6,7 +6,7 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import java.io.File
 
-class ScreenshotRule : TestWatcher() {
+class ScreenshotOnFailureRule : TestWatcher() {
 
     override fun failed(e: Throwable?, description: Description) {
         val device = UiDevice.getInstance(
