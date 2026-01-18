@@ -28,5 +28,11 @@ class LocalFeatureDataSourceImpl(
             prefs[key] = json.encodeToString(snapshot)
         }
     }
+
+    override fun clear(): Unit = runBlocking {
+        context.dataStore.edit { prefs ->
+            prefs.remove(key)
+        }
+    }
 }
 

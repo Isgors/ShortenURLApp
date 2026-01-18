@@ -58,7 +58,7 @@ class OrthosRuntime internal constructor(
             "Snapshot loaded: signals=%d groups=%d policy=%s",
             snapshot.signals.size,
             snapshot.groups.size,
-            snapshot.policy?.type
+            snapshot.policy.type
         )
 
         // ──────────────────────────────

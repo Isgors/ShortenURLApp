@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import dev.igordesouza.shortenurlapp.presentation.home.HomeScreen
+import dev.igordesouza.shortenurlapp.presentation.security.OrthosGateScreen
 import dev.igordesouza.shortenurlapp.presentation.security.OrthosVerdictScreen
 
 @Composable
@@ -30,6 +31,20 @@ fun AppNavHost(
         }
     ) { key ->
         when (key) {
+            AppNavKey.Gate ->
+                NavEntry(key) {
+                    OrthosGateScreen(
+                        onGoHome = {
+                            backStack.clear()
+                            backStack.add(AppNavKey.Home)
+                        },
+                        onShowVerdict = {
+                            backStack.clear()
+                            backStack.add(AppNavKey.OrthosVerdict)
+                        }
+                    )
+                }
+
             AppNavKey.OrthosVerdict ->
                 NavEntry(key) {
                     OrthosVerdictScreen(

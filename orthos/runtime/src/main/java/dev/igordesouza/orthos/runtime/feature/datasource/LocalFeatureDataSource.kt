@@ -9,4 +9,7 @@ interface LocalFeatureDataSource {
 
     fun get(): FeatureSnapshot?
     fun save(snapshot: FeatureSnapshot)
+
+    /** Clears any locally persisted snapshot override. */
+    fun clear()
 }

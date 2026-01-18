@@ -24,3 +24,5 @@ rootProject.name = "orthos"
 include(":core")
 include(":runtime")
 include(":plugin")
+include(":sdk")
+include(":devtools")

@@ -1,12 +1,16 @@
-# 🛡️ Orthos — Runtime Integrity & Policy Engine for Android
+# 🛡️ Orthos — Drop‑in Runtime Integrity & Policy Engine for Android
 
-Welcome to **Orthos**, a modular security policy engine for Android.
+Orthos is a modular Android security engine that combines **build‑time hardening** (ASM + Gradle plugin) with a **runtime signal + policy evaluator** to answer one question:
 
-Orthos provides a flexible, DSL-based framework to define, evaluate, and enforce security policies at both build-time and runtime.
+> **“Can this app instance be trusted right now?”**
 
-## 🚨 Demo Disclaimer (Please Read First)
+It is designed to feel like a **drop‑in SDK (Firebase‑like)** while remaining fully inspectable and testable.
 
-This repository is intentionally **NOT production-hardened**.
+---
+
+## 🚨 Demo disclaimer (please read first)
+
+This repository is intentionally **not production‑hardened**.
 
 The following are included **only to simplify evaluation**:
 
@@ -14,89 +18,191 @@ The following are included **only to simplify evaluation**:
 - 🔑 `release.jks`
 - 🧾 `keystore.properties`
 - 🧾 `local.properties`
-- 🛠️ Preconfigured `release` setup
+- 🛠️ Preconfigured `release` setup (signing + minify)
 
-👉 **In a real production environment:**
-- Keystores would **never** be committed
-- Secrets would live in **secure vaults**
-- CI/CD would inject credentials at build time
-- Runtime policies would be remotely managed
+✅ In a production setup:
 
----
-
-## 🧠 What is Orthos?
-
-Orthos is a **policy-driven runtime protection system** that answers a single question:
-
-> _“Can this app instance be trusted?”_
-
-It does so by:
-- Collecting **Signals**
-- Executing them via a **Signal Engine**
-- Evaluating a **Policy DSL**
-- Producing a **Verdict**
+- Keystores & secrets would **never** be committed
+- CI/CD would inject secrets from a **vault**
+- Policies/flags would be served by a backend and protected by **integrity checks**
+- Canary seeds / native agreements would be rotated and monitored
 
 ---
 
-## 🧩 The Signal → Executor → Verdict Pattern
+## 🧠 Mental model
+
+Orthos follows a simple pipeline:
 
 ```
-┌─────────┐     ┌────────────┐     ┌─────────┐
-│ Signal  │ --> │  Executor  │ --> │ Verdict │
-└─────────┘     └────────────┘     └─────────┘
+Signals → Executor → (Weights) → Policy → Verdict
+```
+
+- **Signals** produce observations (root/emulator/canary/etc.)
+- An **Executor** runs enabled signals
+- **Weights** (from feature config) scale confidence
+- A **Policy DSL** turns evidence into a decision
+- The app reacts to a final **Verdict**
+
+---
+
+## 🧩 The Signal → Executor → Verdict pattern
+
+```
+┌──────────┐     ┌──────────────┐     ┌──────────┐
+│ Signals  │ --> │  Executor    │ --> │ Verdict  │
+└──────────┘     └──────────────┘     └──────────┘
+       ▲                  ▲                  ▲
+       │                  │                  │
+ Feature config     Weighting logic     Policy DSL / JSON
+```
+
+---
+
+## 🏗️ Modules (Firebase‑like structure)
+
+Orthos is split into focused modules so apps can adopt it incrementally.
+
+```
+orthos/
+├── orthos-core        → Pure Kotlin domain (models + verdict types)
+├── orthos-plugin      → Gradle plugin (ASM instrumentation, build tasks)
+├── orthos-runtime     → Signal engine + snapshot/weights/policy evaluation
+├── orthos-sdk         → ✅ Public facade (drop‑in “SDK” entrypoint)
+└── orthos-devtools    → 🧪 Dev Panel (override flags/policy without reinstall)
+```
+
+### 1) `orthos-core` (domain)
+- `SignalId`, `SignalType`, `SignalResult`
+- `RuntimeState`, `OrthosVerdict`
+
+### 2) `orthos-plugin` (build-time hardening)
+- Registers ASM visitors (e.g., canary/native agreement injectors)
+- Generates and consumes a `keep-registry.txt` to produce keep rules
+- Variant-aware enablement so instrumentation only runs when intended
+
+### 3) `orthos-runtime` (engine)
+- Loads feature snapshot (local/remote)
+- Resolves enabled signals
+- Executes signals and applies weights
+- Evaluates policy (via DSL definition)
+- Returns `OrthosVerdict` **with evidences**
+
+### 4) `orthos-sdk` (drop-in facade)
+The consumer app integrates with a stable surface:
+
+```kotlin
+interface OrthosRuntimeApi {
+    suspend fun evaluate(): OrthosVerdict
+}
+```
+
+The SDK selects between:
+
+- ✅ **Real** runtime (full evaluation)
+- 🧊 **NoOp** runtime (always SAFE, score 0) — useful for debug builds and safe‑off mode
+
+### 5) `orthos-devtools` (Dev Panel)
+A developer UI to:
+- Override feature flags and policy thresholds
+- Apply changes instantly
+- Avoid “uninstall app → reinstall” loops during development
+
+---
+
+## 🚪 Security‑aware navigation (Gate pattern)
+
+Instead of hardcoding the security UI as the entrypoint, the app starts at a **Gate**.
+
+High-level flow:
+
+```
+App launch
+   ↓
+Gate Screen
+   ↓
+Orthos enabled?
+   ├── NO  → Home
+   └── YES → OrthosVerdictScreen
+                 ↓
+        SAFE/SUSPICIOUS → Home
+        TAMPERED → Exit app
+```
+
+Why it matters:
+- Orthos can be **fully disabled** per build variant
+- Security UI becomes **opt-in and controlled**
+- The rest of the app stays clean and unaware of security plumbing
+
+---
+
+## ✅ One source of truth: “Orthos enabled”
+
+Orthos should not end up in a state where:
+- plugin is enabled, but runtime is not (or vice‑versa)
+
+This repo uses a single build-time flag (example):
+
+```kotlin
+buildTypes {
+  debug { resValue("bool", "orthos_enabled", "false") }
+  release { resValue("bool", "orthos_enabled", "true") }
+}
+```
+
+Then the SDK checks enablement via one function (e.g.):
+```kotlin
+Orthos.isEnabled(context)
 ```
 
 ---
 
 ## 🧬 Policy DSL
 
-Orthos uses a **Policy DSL** to define how signals are evaluated.
+Orthos uses a small Policy DSL to define decisions based on final score:
 
-Supported policies:
-- **Strict Policy**
-- **Graded Policy**
+```kotlin
+policy {
+    score(SumScoreStrategy)
 
-Policies can be serialized, remotely updated, and safely evaluated with fail-safes.
+    whenScore {
+        atLeast(100, RuntimeState.TAMPERED)
+        otherwise(RuntimeState.SAFE)
+    }
+}
+```
 
----
-
-## 🚀 Project Structure
-
-Orthos is divided into three specialized modules to provide end-to-end security:
-
-### 1. 🧠 `orthos-core`
-The foundation of the engine. It contains the core logic, base data models, and the internal evaluation bridge. It is a pure Kotlin module, making it lightweight and highly testable.
-
-### 2. 🔌 `orthos-plugin`
-A custom **Gradle Plugin** that integrates into the Android build process.
-- **Static Analysis**: Scans project configurations.
-- **Build Integration**: Automates the preparation of security registries (like the `PrepareOrthosKeepRegistryTask`).
-- **Enforcement**: Can be configured to fail builds that do not meet minimum security standards.
-
-### 3. ⚡ `orthos-runtime`
-The client-side library used within the Android application.
-- **Policy DSL**: A powerful, human-readable Domain Specific Language to define security rules.
-- **Evaluators**: Component that executes the defined policies and returns a `Verdict`.
-- **Fail-Safe Handlers**: Configurable behavior (Conservative vs. Permissive) for when an error occurs during evaluation.
+Policies can be:
+- Built locally via DSL
+- Derived from JSON
+- Hot-swapped remotely (demo-friendly)
+- Evaluated with fail-safes (Conservative / Permissive)
 
 ---
 
-## 🛠️ Technologies Used
+## 🖥️ Demo Security UI (consumer app)
 
-- **Kotlin 2.1.0** 🖥️
-- **Gradle Kotlin DSL** 🐘
-- **Kotlin DSL API** (for the policy builder)
-- **Android Gradle Plugin (AGP) API**
-- **Koin** (for runtime dependency injection)
-- **Coroutines** (for asynchronous policy evaluation)
+The demo app includes a small “security package” to visualize verdicts:
+
+- `OrthosVerdictScreen.kt`
+- `OrthosVerdictUiState.kt`
+- `OrthosVerdictViewModel.kt`
+
+Behavior:
+- **SAFE** → Continue
+- **SUSPICIOUS** → Continue anyway
+- **TAMPERED** → Close app
+
+This demonstrates how a product could:
+- block access
+- reduce feature access
+- log telemetry
+- trigger additional verification steps
 
 ---
 
-## 📖 How to Use
+## 🧪 How to integrate (consumer app)
 
-### 🔌 Applying the Plugin
-Add the plugin to your `app/build.gradle.kts`:
-
+### 1) Apply the plugin
 ```kotlin
 plugins {
     id("dev.igordesouza.orthos.plugin")
@@ -108,22 +214,60 @@ orthos {
 }
 ```
 
+### 2) Add the dependency
+```kotlin
+dependencies {
+    implementation("dev.igordesouza.orthos:runtime:0.1.0")
+    // If using the SDK facade:
+    implementation("dev.igordesouza.orthos:sdk:0.1.0")
+    // Dev tools should be debug-only:
+    debugImplementation("dev.igordesouza.orthos:devtools:0.1.0")
+}
+```
+
+### 3) Wire DI (Koin example)
+```kotlin
+single {
+    Orthos.install(context = androidContext(), enabledFromConsumer = BuildConfig.ORTHOS_ENABLED)
+}
+```
+
+Then your ViewModel depends on the facade instead of the runtime directly:
+```kotlin
+class OrthosVerdictViewModel(
+  private val orthos: OrthosRuntimeApi
+) : ViewModel()
+```
+
 ---
 
-## 🖥️ Demo Security UI
+## 🧰 Technologies used
 
-The demo app includes:
-- `OrthosVerdictScreen.kt`
-- `OrthosVerdictUiState.kt`
-- `OrthosVerdictViewModel.kt`
-
-This UI demonstrates how apps can react to security verdicts.
+- Kotlin + Coroutines
+- Jetpack Compose
+- Koin
+- Android Gradle Plugin (AGP) APIs
+- ASM (bytecode visitors + instrumentation)
+- R8 / Proguard integration (keep rules)
+- Feature snapshot (JSON → runtime config)
 
 ---
 
-## 🚀 Final Notes
+## 🎯 Final notes
 
-Orthos is **experimental** and designed for **education and evaluation**.
+This codebase is intentionally structured to highlight real-world platform engineering skills:
 
-👨‍💻 **Author:** Igor de Souza  
-🛡️ **Status:** Experimental / Educational
+- bytecode instrumentation and build tooling
+- variant-aware security configuration
+- policy-as-code design (DSL)
+- safe fallbacks and fail-safe behavior
+- SDK ergonomics (drop-in, stable API surface)
+- developer productivity (dev panel overrides)
+- clean app integration (Gate navigation)
+
+---
+
+## 👨‍💻 Author
+
+**Igor de Souza**  
+Status: Experimental / Educational

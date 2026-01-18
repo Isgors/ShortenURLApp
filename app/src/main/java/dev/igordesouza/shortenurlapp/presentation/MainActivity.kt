@@ -16,7 +16,7 @@ import dev.igordesouza.shortenurlapp.presentation.theme.ShortenURLAppTheme
 class MainActivity : ComponentActivity() {
 
     val backStack: MutableList<AppNavKey> =
-        mutableStateListOf(AppNavKey.OrthosVerdict)
+        mutableStateListOf(AppNavKey.Gate)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {

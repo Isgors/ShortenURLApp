@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".OrthosDevPanelActivity"
+            android:exported="true"
+            android:label="Orthos Dev Panel"
+            android:theme="@style/Theme.DevPanelTheme" />
+    </application>
+</manifest>

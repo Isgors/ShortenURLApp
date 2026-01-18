@@ -2,13 +2,13 @@ package dev.igordesouza.shortenurlapp.presentation.security
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.igordesouza.orthos.runtime.OrthosRuntime
+import dev.igordesouza.orthos.sdk.OrthosRuntimeApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class OrthosVerdictViewModel(
-    private val orthosRuntime: OrthosRuntime
+    private val orthosRuntime: OrthosRuntimeApi
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OrthosVerdictUiState())
