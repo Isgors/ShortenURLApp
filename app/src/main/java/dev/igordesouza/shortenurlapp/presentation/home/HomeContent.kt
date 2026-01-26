@@ -144,6 +144,30 @@ fun HomeContent(
                 }
             } else {
 
+                // HEADER
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Recently shortened URLs",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Button(
+                        modifier = Modifier.testTag("DeleteAllButton"),
+                        enabled = state.urls.isNotEmpty(),
+                        onClick = {
+                            onIntent(HomeIntent.DeleteAllRequested)
+                        }
+                    ) {
+                        Text("Delete All")
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 if (state.urls.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -155,42 +179,23 @@ fun HomeContent(
                         )
                     }
                 } else {
-
-                    // HEADER
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Last shortened URL",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    UrlItem(
-                        modifier = Modifier.testTag("UrlItem_${state.urls[0].alias}"),
-                        url = state.urls[0],
-                        isDeleteEnabled = true,
-                        onDelete = {
-                            onIntent(HomeIntent.DeleteUrlRequested(state.urls[0]))
-                        },
-                        onClick = {
-                            onIntent(HomeIntent.UrlClicked(state.urls[0]))
+                    LazyColumn(state = listState) {
+                        items(
+                            items = state.urls,
+                            key = { it.alias }
+                        ) { url ->
+                            UrlItem(
+                                modifier = Modifier.testTag("UrlItem_${url.alias}"),
+                                url = url,
+                                isDeleteEnabled = true,
+                                onDelete = {
+                                    onIntent(HomeIntent.DeleteUrlRequested(url))
+                                },
+                                onClick = {
+                                    onIntent(HomeIntent.UrlClicked(url))
+                                }
+                            )
                         }
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Button(
-                        modifier = Modifier.testTag("GoToRecentlyShortenedButton"),
-                        onClick = {
-                            //TODO Navigation lambda
-                        }
-                    ) {
-                        Text(text = "Recently shortened URLs")
                     }
                 }
             }
@@ -224,18 +229,6 @@ fun HomeContent(
             }
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeContentEmptyPreview() {
-    HomeContent(
-        state = HomeState(
-            urls = emptyList(),
-            urlInput = ""
-        ),
-        onIntent = {}
-    )
 }
 
 @Preview(showBackground = true)

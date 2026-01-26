@@ -20,11 +20,8 @@ uiTest = "1.10.0"
 turbine = "1.0.0"
 coreKtxVersion = "1.7.0"
 jetbrainsKotlinJvm = "2.2.21"
-navigation3Runtime = "1.0.0"
 
 [libraries]
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3Runtime" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3Runtime" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
