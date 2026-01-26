@@ -36,7 +36,8 @@ class HomeViewModel(
     init {
         observeUrlsUseCase()
             .onEach { urls ->
-                _state.update { it.copy(urls = urls.toPresentation()) }
+                // TODO handle empty list
+                _state.update { it.copy(url = urls.toPresentation()[0]) }
             }
             .launchIn(viewModelScope)
     }
@@ -100,8 +101,13 @@ class HomeViewModel(
                     ShortenUrlOutcome.EmptyInput ->
                         sendEffect(ShowError("URL cannot be empty"))
 
-                    ShortenUrlOutcome.Success -> {
-                        _state.update { it.copy(urlInput = "") }
+                    is ShortenUrlOutcome.Success -> {
+                        _state.update {
+                            it.copy(
+                                urlInput = "",
+                                url = outcome.url.toPresentation()
+                            )
+                        }
                         sendEffect(ScrollToIndex(0))
                     }
 

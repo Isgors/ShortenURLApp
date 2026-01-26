@@ -18,11 +18,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import dev.igordesouza.shortenurlapp.presentation.home.component.UrlActionsBottomSheet
 import dev.igordesouza.shortenurlapp.presentation.home.model.Url
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel = koinViewModel(),
+    onRecentlyShortenUrls: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -47,13 +49,13 @@ fun HomeScreen(
                         label = "Shortened URL",
                         text = effect.url.shortenedUrl
                     )
-                    snackbarHostState.showSnackbar("URL copied")
                     bottomSheetUrl = null
+                    snackbarHostState.showSnackbar("URL copied")
                 }
 
                 is HomeEffect.OpenUrl -> {
-                    openInBrowser(context, effect.url.shortenedUrl)
                     bottomSheetUrl = null
+                    openInBrowser(context, effect.url.shortenedUrl)
                 }
 
                 is HomeEffect.ScrollToIndex ->

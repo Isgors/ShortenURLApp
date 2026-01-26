@@ -7,14 +7,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
-import dev.igordesouza.shortenurlapp.presentation.home.HomeScreen
-import dev.igordesouza.shortenurlapp.presentation.home.HomeViewModel
+import dev.igordesouza.shortenurlapp.presentation.navigation.AppNavHost
+import dev.igordesouza.shortenurlapp.presentation.navigation.AppNavKey
 import dev.igordesouza.shortenurlapp.presentation.theme.ShortenURLAppTheme
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
-    val viewModel: HomeViewModel by viewModel()
+
+    val backStack: MutableList<AppNavKey> =
+        mutableStateListOf(AppNavKey.Home)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +28,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    HomeScreen(viewModel)
+                    AppNavHost(
+                        backStack = backStack
+                    )
                 }
             }
         }

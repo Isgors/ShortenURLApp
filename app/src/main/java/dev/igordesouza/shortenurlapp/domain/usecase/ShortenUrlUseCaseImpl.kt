@@ -18,7 +18,7 @@ class ShortenUrlUseCaseImpl(
 
         urlRepository.shortenUrl(input).collect { result ->
             result
-                .onSuccess { emit(ShortenUrlOutcome.Success) }
+                .onSuccess { emit(ShortenUrlOutcome.Success()) }
                 .onFailure {
                     emit(
                         ShortenUrlOutcome.Error(
