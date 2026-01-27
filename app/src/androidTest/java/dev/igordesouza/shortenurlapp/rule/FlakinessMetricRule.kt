@@ -2,9 +2,11 @@ package dev.igordesouza.shortenurlapp.rule
 
 import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
-import com.google.gson.Gson
+import dev.igordesouza.shortenurlapp.category.extractCategories
+import dev.igordesouza.shortenurlapp.rule.export.TestMetricExporter
 import dev.igordesouza.shortenurlapp.rule.model.TestMetric
-import org.junit.experimental.categories.Category
+import dev.igordesouza.shortenurlapp.rule.retry.RetryContext
+import dev.igordesouza.shortenurlapp.rule.sla.SlaPolicy
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -12,22 +14,22 @@ import java.io.File
 import kotlin.system.measureTimeMillis
 
 /**
- * Collects execution metrics, enforces SLAs, and exports results as JSON.
+ * Measures execution metrics, enforces SLAs, and exports structured JSON results.
  *
- * Responsibilities:
- * - Measure execution time
- * - Detect pass/fail
- * - Enforce category-based SLA
- * - Export metrics for CI aggregation
+ * This rule is:
+ * - Retry-aware
+ * - Shard-safe
+ * - Device-aware
+ * - CI-friendly
+ *
+ * ONE metric file is generated per test attempt.
  */
 class FlakinessMetricRule(
     private val suite: String
 ) : TestRule {
 
-    private val gson = Gson()
-
-    override fun apply(base: Statement, description: Description): Statement {
-        return object : Statement() {
+    override fun apply(base: Statement, description: Description): Statement =
+        object : Statement() {
 
             override fun evaluate() {
                 var failure: Throwable? = null
@@ -36,17 +38,18 @@ class FlakinessMetricRule(
                 val durationMs = measureTimeMillis {
                     try {
                         base.evaluate()
+                        RetryContext.markPassed()
                     } catch (t: Throwable) {
                         failure = t
                         throw t
                     }
                 }
 
-                val categories = extractCategories(description)
-                val retries = extractRetries()
+                val categories = description.extractCategories()
+                val maxAllowedMs = SlaPolicy.maxAllowedMs(categories)
 
                 val status = when {
-                    violatesSla(durationMs, categories) ->
+                    durationMs > maxAllowedMs ->
                         TestMetric.Status.SLA_VIOLATION
                     failure == null ->
                         TestMetric.Status.PASS
@@ -54,67 +57,38 @@ class FlakinessMetricRule(
                         TestMetric.Status.FAIL
                 }
 
-                val metric = TestMetric(
-                    suite = suite,
-                    testName = description.methodName,
-                    status = status,
-                    durationMs = durationMs,
-                    retries = retries,
-                    categories = categories,
-                    deviceModel = Build.MODEL ?: "unknown",
-                    apiLevel = Build.VERSION.SDK_INT,
-                    timestamp = startTimestamp
+                val context =
+                    InstrumentationRegistry.getInstrumentation().targetContext
+
+                val outputDir = File(
+                    context.getExternalFilesDir(null),
+                    "test-metrics/$suite"
                 )
 
-                exportMetric(metric)
+                val metric = TestMetric(
+                    suite = suite,
+                    className = description.className,
+                    testName = description.methodName,
+                    categories = categories,
+                    attempt = RetryContext.currentAttempt(),
+                    retryReason = RetryContext.lastRetryReason()?.name,
+                    status = status,
+                    durationMs = durationMs,
+                    deviceModel = Build.MODEL ?: "unknown",
+                    apiLevel = Build.VERSION.SDK_INT,
+                    timestampEpochMs = startTimestamp
+                )
+
+                TestMetricExporter.export(outputDir, metric)
 
                 RetryContext.clear()
+
                 if (status == TestMetric.Status.SLA_VIOLATION) {
                     error(
-                        "SLA violation: ${description.methodName} took ${durationMs}ms " +
-                                "for categories=$categories"
+                        "SLA violation: ${description.methodName} " +
+                                "took ${durationMs}ms (max=$maxAllowedMs ms)"
                     )
                 }
             }
         }
-    }
-
-    // ------------------ SLA ------------------
-
-    private fun violatesSla(
-        durationMs: Long,
-        categories: List<String>
-    ): Boolean {
-        val maxAllowed = when {
-            categories.contains("ReleaseGate") -> 3_000
-            categories.contains("SystemUi") -> 10_000
-            else -> 15_000
-        }
-        return durationMs > maxAllowed
-    }
-
-    // ------------------ METADATA ------------------
-
-    private fun extractCategories(description: Description): List<String> {
-        return description.annotations
-            .filterIsInstance<Category>()
-            .flatMap { category ->
-                category.value.mapNotNull { clazz ->
-                    clazz.simpleName
-                }
-            }
-    }
-
-    private fun extractRetries(): Int {
-        return RetryContext.getRetries()
-    }
-
-    // ------------------ EXPORT ------------------
-
-    private fun exportMetric(metric: TestMetric) {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val file = File(context.filesDir, "test-metrics.json")
-
-        file.appendText(gson.toJson(metric) + "\n")
-    }
 }

@@ -1,51 +1,56 @@
 package dev.igordesouza.shortenurlapp.rule
 
-import org.junit.experimental.categories.Category
+import dev.igordesouza.shortenurlapp.category.extractCategories
+import dev.igordesouza.shortenurlapp.rule.retry.RetryContext
+import dev.igordesouza.shortenurlapp.rule.retry.RetryPolicy
+import dev.igordesouza.shortenurlapp.rule.retry.RetryReasonClassifier
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * Retries flaky tests only.
+ * Retries flaky tests based on category-driven retry policy.
  *
- * Retry count is propagated via [RetryContext].
+ * Responsibilities:
+ * - Control retry attempts
+ * - Track retry reasons
+ * - Communicate state via RetryContext
+ *
+ * This rule:
+ * - NEVER retries ReleaseGate tests
+ * - Is safe for sharding & parallel execution
+ * - Does not swallow failures
  */
-class RetryFlakyRule(
-    private val maxRetries: Int = 2
-) : TestRule {
+class RetryFlakyRule : TestRule {
 
-    override fun apply(base: Statement, description: Description): Statement {
-        return object : Statement() {
+    override fun apply(base: Statement, description: Description): Statement =
+        object : Statement() {
 
             override fun evaluate() {
-                val isFlaky = description.annotations
-                    .filterIsInstance<Category>()
-                    .any { category ->
-                        category.value.any { it.simpleName == "Flaky" }
-                    }
+                val categories = description.extractCategories()
+                val maxRetries = RetryPolicy.maxRetries(categories)
 
-                val allowedRetries = if (isFlaky) maxRetries else 0
-                var attempt = 0
-                var lastError: Throwable? = null
+                var lastFailure: Throwable? = null
 
-                try {
-                    while (attempt <= allowedRetries) {
-                        try {
-                            base.evaluate()
-                            RetryContext.setRetries(attempt)
-                            return
-                        } catch (t: Throwable) {
-                            lastError = t
-                            attempt++
-                        }
+                for (attempt in 1..(maxRetries + 1)) {
+                    RetryContext.startAttempt(attempt)
+
+                    try {
+                        base.evaluate()
+                        RetryContext.markPassed()
+                        return
+                    } catch (t: Throwable) {
+                        val reason = RetryReasonClassifier.classify(t)
+                        RetryContext.markFailed(reason)
+                        lastFailure = t
+
+                        val isLastAttempt = attempt > maxRetries
+                        if (isLastAttempt) break
                     }
-                } finally {
-                    // Ensures clean state between tests
-                    RetryContext.setRetries(attempt - 1)
                 }
 
-                throw lastError!!
+                RetryContext.clear()
+                throw lastFailure ?: error("Retry failed without exception")
             }
         }
-    }
 }
